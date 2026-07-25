@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GRIND — Built for artists who actually grind</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap');
+
+  :root {
+    --bg: #0D0F16;
+    --card: #14161F;
+    --card-border: #262A38;
+    --ember-1: #8A5A2E;
+    --ember-2: #E8A33D;
+    --ember-3: #F4C15C;
+    --teal: #4FD1C5;
+    --rose: #E85A6E;
+    --text: #EDEAE3;
+    --text-dim: #8B8F9E;
+    --text-dimmer: #4B4F5C;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .grain {
+    position: fixed;
+    inset: 0;
+    opacity: 0.045;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .glow {
+    position: fixed;
+    inset: -20%;
+    background: radial-gradient(circle at 50% 15%, rgba(232,163,61,0.14), transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+    transition: background 1.2s ease;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  .num { font-family: 'Oswald', sans-serif; letter-spacing: 0.02em; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 28px 0;
+  }
+  .logo { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.18em; }
+
+  .hero {
+    padding: 70px 0 40px;
+    text-align: center;
+  }
+
+  .flame {
+    width: 88px; height: 88px; margin: 0 auto 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 24px;
+    background: linear-gradient(145deg, var(--ember-1), var(--ember-2), var(--ember-3));
+    box-shadow: 0 0 60px rgba(232,163,61,0.35);
+    animation: flicker 3s ease-in-out infinite;
+  }
+  .flame svg { width: 44px; height: 44px; }
+  @keyframes flicker { 0%,100% { transform: scale(1) rotate(-1deg); } 50% { transform: scale(1.04) rotate(1deg); } }
+
+  h1 {
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(40px, 7vw, 68px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.02;
+    margin-bottom: 20px;
+  }
+  h1 .accent {
+    background: linear-gradient(90deg, var(--ember-2), var(--ember-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .sub {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 560px;
+    margin: 0 auto 40px;
+  }
+
+  .waitlist-form {
+    display: flex;
+    gap: 10px;
+    max-width: 440px;
+    margin: 0 auto 16px;
+  }
+  .waitlist-form input[type="email"] {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+  }
+  .waitlist-form input[type="email"]:focus {
+    outline: none;
+    border-color: var(--ember-2);
+  }
+  .waitlist-form button {
+    background: linear-gradient(90deg, var(--ember-2), var(--rose));
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    color: #12141C;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s ease;
+  }
+  .waitlist-form button:hover { transform: translateY(-1px); }
+  .waitlist-form button:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+  .status-msg {
+    font-size: 13px;
+    min-height: 18px;
+    margin-bottom: 10px;
+  }
+  .status-msg.ok { color: var(--teal); }
+  .status-msg.err { color: var(--rose); }
+
+  .counter {
+    font-size: 12px;
+    color: var(--text-dimmer);
+    letter-spacing: 0.05em;
+  }
+  .counter .n { color: var(--ember-3); font-weight: 700; }
+
+  .section {
+    padding: 70px 0;
+    border-top: 1px solid var(--card-border);
+  }
+  .section-label {
+    font-size: 12px;
+    color: var(--text-dimmer);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .section h2 {
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(26px, 4vw, 36px);
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 48px;
+    max-width: 620px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .feature {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 26px;
+  }
+  .feature .tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ember-3);
+    background: rgba(232,163,61,0.12);
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .feature h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .feature p { font-size: 14px; color: var(--text-dim); }
+
+  .test-line {
+    text-align: center;
+    max-width: 640px;
+    margin: 60px auto 0;
+    font-size: 15px;
+    color: var(--text-dim);
+    font-style: italic;
+    line-height: 1.7;
+  }
+  .test-line strong { color: var(--text); font-style: normal; }
+
+  footer {
+    text-align: center;
+    padding: 60px 0 40px;
+  }
+  footer .tagline {
+    font-size: 10px;
+    color: var(--text-dimmer);
+    letter-spacing: 0.2em;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 520px) {
+    .waitlist-form { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+  <div class="glow" id="glow"></div>
+  <div class="grain"></div>
+
+  <div class="wrap">
+    <nav>
+      <div class="logo">GRIND</div>
+    </nav>
+
+    <section class="hero">
+      <div class="flame">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C12 2 6 8 6 13.5C6 17.09 8.91 20 12.5 20C16.09 20 19 17.09 19 13.5C19 12.5 18.7 11.6 18.3 10.8C17.9 12.3 16.7 13.5 15.2 13.5C15.7 12.2 16 10.8 15.5 9.3C15 10.5 14 11.2 13 11C13.7 8.7 12.8 5 12 2Z" fill="#12141C"/>
+        </svg>
+      </div>
+
+      <h1>Built for artists<br>who actually <span class="accent">grind.</span></h1>
+      <p class="sub">If you're actually trying to make it as an artist, you can't just wing it and hope the algorithm notices. GRIND is the system that does the work with you — not another app that just sits there.</p>
+
+      <form class="waitlist-form" id="waitlistForm">
+        <input type="email" id="emailInput" placeholder="you@email.com" required />
+        <button type="submit" id="submitBtn">Join the waitlist</button>
+      </form>
+      <div class="status-msg" id="statusMsg"></div>
+      <div class="counter" id="counter">Be part of the first wave</div>
+    </section>
+
+    <section class="section">
+      <div class="section-label">What's actually inside</div>
+      <h2>Not a vibe. Not motivation you'll lose in a week. An actual system.</h2>
+      <div class="features">
+        <div class="feature">
+          <span class="tag">Weekly Rhythm</span>
+          <h3>Never stare at a blank screen again</h3>
+          <p>Set your posting and music-making rhythm once, in your own words — Monday's your studio day, Thursday's release prep. It just runs, every week, so you're never sitting there at 11pm wondering what to post.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">Auto Tracking</span>
+          <h3>Stop screenshotting your own stats</h3>
+          <p>Connect Instagram and YouTube once. GRIND pulls your real views, likes, and follows automatically — no more scrolling back through your own analytics trying to remember how last week's post did.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">Release Toolkit</span>
+          <h3>A real rollout plan for every drop</h3>
+          <p>Drop a release date, get a real 6-week plan — cover art, snippet, behind-the-scenes, pitch outreach, release day — plus a content calendar built around it. No more winging it the week before you drop.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">GRIND Score</span>
+          <h3>One number that actually means something</h3>
+          <p>Your streak, your consistency, your stats, your release activity — combined into a single score that reflects real momentum. Not XP for the sake of feeling good.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">Insight Engine</span>
+          <h3>Stop guessing which hook actually works</h3>
+          <p>See which content type and which day genuinely perform best for you — real patterns pulled from your real numbers, not vibes, not luck, not a guess dressed up as advice.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">Collab Board</span>
+          <h3>Find your next feature, for real</h3>
+          <p>Post what you're looking for — a verse, a cover swap, a challenge partner — the same way real collabs actually happen. No random DMs from strangers, no noise.</p>
+        </div>
+      </div>
+
+      <p class="test-line">There might be some tools out there, but none of them were built to actually get you somewhere. <strong>GRIND is built by an independent artist, for independent artists</strong> — everything you need to make it in this industry, in one place.</p>
+    </section>
+
+    <footer>
+      <div class="logo" style="font-size: 16px; margin-bottom: 20px;">GRIND</div>
+      <form class="waitlist-form" id="waitlistForm2" style="max-width: 420px;">
+        <input type="email" id="emailInput2" placeholder="you@email.com" required />
+        <button type="submit" id="submitBtn2">Join the waitlist</button>
+      </form>
+      <div class="status-msg" id="statusMsg2"></div>
+      <div class="tagline">CREATE. POST. GRIND. REPEAT.</div>
+    </footer>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://uksdcyoxjvpmjsqqwdjj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrc2RjeW94anZwbWpzcXF3ZGpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NzgyNTQsImV4cCI6MjEwMDQ1NDI1NH0.l0VYdiYFfd16pQGHtENTTBYtlNvcxYJXtXqMaQVxAVI";
+
+    async function fetchCount() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/waitlist_count`, {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: "{}"
+        });
+        if (!res.ok) throw new Error("count fetch failed");
+        const count = await res.json();
+        // Deliberately not displaying the raw number — a low early count can
+        // discourage signups more than it encourages them. The glow still
+        // reacts to real growth, just without showing the digit.
+        document.getElementById("counter").textContent = "Be part of the first wave";
+        const intensity = Math.min(1, count / 100);
+        document.getElementById("glow").style.background =
+          `radial-gradient(circle at 50% 15%, rgba(232,163,61,${0.10 + intensity * 0.18}), transparent 55%)`;
+      } catch {
+        document.getElementById("counter").textContent = "Be part of the first wave";
+      }
+    }
+
+    async function submitEmail(email, statusEl, btnEl) {
+      if (!email || !email.includes("@")) {
+        statusEl.textContent = "Enter a valid email";
+        statusEl.className = "status-msg err";
+        return;
+      }
+      btnEl.disabled = true;
+      btnEl.textContent = "Joining...";
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist_signups`, {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify({ email })
+        });
+        if (res.status === 201 || res.status === 200) {
+          statusEl.textContent = "You're on the list. We'll email you at launch.";
+          statusEl.className = "status-msg ok";
+          fetchCount();
+        } else if (res.status === 409) {
+          statusEl.textContent = "That email's already on the list.";
+          statusEl.className = "status-msg ok";
+        } else {
+          throw new Error("insert failed");
+        }
+      } catch {
+        statusEl.textContent = "Something went wrong — try again.";
+        statusEl.className = "status-msg err";
+      } finally {
+        btnEl.disabled = false;
+        btnEl.textContent = "Join the waitlist";
+      }
+    }
+
+    document.getElementById("waitlistForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("emailInput").value.trim();
+      submitEmail(email, document.getElementById("statusMsg"), document.getElementById("submitBtn"));
+    });
+    document.getElementById("waitlistForm2").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("emailInput2").value.trim();
+      submitEmail(email, document.getElementById("statusMsg2"), document.getElementById("submitBtn2"));
+    });
+
+    fetchCount();
+  </script>
+</body>
+</html>
