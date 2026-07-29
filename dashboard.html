@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard — GRIND</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap');
+  :root {
+    --bg: #0D0F16; --card: #14161F; --card-border: #262A38;
+    --ember-1: #8A5A2E; --ember-2: #E8A33D; --ember-3: #F4C15C;
+    --text: #EDEAE3; --text-dim: #8B8F9E; --text-dimmer: #4B4F5C;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  .glow {
+    position: fixed; inset: -20%;
+    background: radial-gradient(circle at 50% 40%, rgba(232,163,61,0.16), transparent 55%);
+    pointer-events: none; z-index: 0;
+  }
+  .content { position: relative; z-index: 1; max-width: 480px; }
+  .flame {
+    width: 88px; height: 88px; margin: 0 auto 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 24px;
+    background: linear-gradient(145deg, var(--ember-1), var(--ember-2), var(--ember-3));
+    box-shadow: 0 0 60px rgba(232,163,61,0.35);
+    animation: flicker 3s ease-in-out infinite, pulse 2.4s ease-in-out infinite;
+  }
+  .flame svg { width: 52px; height: 52px; }
+  @keyframes flicker { 0%,100% { transform: scale(1) rotate(-1deg); } 50% { transform: scale(1.04) rotate(1deg); } }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 60px rgba(232,163,61,0.35); } 50% { box-shadow: 0 0 90px rgba(232,163,61,0.55); } }
+  .logo { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.18em; margin-bottom: 16px; }
+  h1 { font-family: 'Oswald', sans-serif; font-size: 28px; font-weight: 600; margin-bottom: 14px; }
+  p { color: var(--text-dim); font-size: 15px; line-height: 1.6; margin-bottom: 8px; }
+  .welcome { color: var(--ember-3); font-size: 14px; margin-bottom: 24px; }
+  .signout { margin-top: 28px; color: var(--text-dimmer); font-size: 13px; background: none; border: none; cursor: pointer; text-decoration: underline; }
+  .signout:hover { color: var(--ember-3); }
+  #loading { color: var(--text-dim); }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="content" id="content">
+    <p id="loading">Loading...</p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = "https://uksdcyoxjvpmjsqqwdjj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrc2RjeW94anZwbWpzcXF3ZGpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NzgyNTQsImV4cCI6MjEwMDQ1NDI1NH0.l0VYdiYFfd16pQGHtENTTBYtlNvcxYJXtXqMaQVxAVI";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const content = document.getElementById('content');
+
+    function showDashboard(session) {
+      content.innerHTML = `
+        <div class="flame">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="flameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8A5A2E"/>
+                <stop offset="50%" stop-color="#E8A33D"/>
+                <stop offset="100%" stop-color="#F4C15C"/>
+              </linearGradient>
+            </defs>
+            <path fill-rule="evenodd" clip-rule="evenodd" fill="#0D0F16" d="M12 2C8.2 6.1 5.2 10.2 5.2 14.2C5.2 18.6 8.5 22 12.6 22C17 22 20.1 18.5 20.1 14.4C20.1 12.9 19.7 11.5 19.1 10.3C18.8 12 17.4 13.3 16.1 12.9C17 10.6 16.4 7.9 15.1 6.1C14.9 8.1 13.6 9.5 12.3 9C13.3 6.6 13.1 3.9 12 2Z M12.6 12.3C10.7 12.3 9.3 13.8 9.3 15.6C9.3 17.4 10.7 18.9 12.6 18.9C13.6 18.9 14.5 18.4 15.1 17.7L12.9 17.7L12.9 16.1L16.5 16.1C16.5 16 16.5 15.8 16.5 15.6C16.5 13.8 14.6 12.3 12.6 12.3Z"/>
+          </svg>
+        </div>
+        <div class="logo">GRIND</div>
+        <p class="welcome">You're signed in as ${session.user.email}</p>
+        <h1>GRIND is in active development.</h1>
+        <p>You're already set up — the moment it's ready, you'll be able to jump straight in. No re-signing up, no waiting in line.</p>
+        <p>Check back soon.</p>
+        <button class="signout" id="signoutBtn">Sign out</button>
+      `;
+
+      document.getElementById('signoutBtn').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+      });
+    }
+
+    async function init() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        showDashboard(session);
+      } else {
+        window.location.href = 'signin.html';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
