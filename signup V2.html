@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create Account — GRIND</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap');
+  :root {
+    --bg: #0D0F16; --card: #14161F; --card-border: #262A38;
+    --ember-2: #E8A33D; --rose: #E85A6E; --teal: #4FD1C5;
+    --text: #EDEAE3; --text-dim: #8B8F9E; --text-dimmer: #4B4F5C;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .logo { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.18em; margin-bottom: 32px; }
+  .card {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 20px;
+    padding: 36px; max-width: 400px; width: 100%; text-align: center;
+  }
+  h1 { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; margin-bottom: 10px; }
+  p.sub { color: var(--text-dim); font-size: 14px; margin-bottom: 24px; }
+  form { display: flex; flex-direction: column; gap: 12px; }
+  input {
+    background: var(--bg); border: 1px solid var(--card-border); border-radius: 10px;
+    padding: 14px 16px; color: var(--text); font-size: 15px; font-family: inherit; width: 100%;
+  }
+  input:focus { outline: none; border-color: var(--ember-2); }
+  button {
+    background: linear-gradient(90deg, var(--ember-2), var(--rose));
+    border: none; border-radius: 10px; padding: 14px 24px;
+    color: #12141C; font-weight: 700; font-size: 15px; cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  button:hover { transform: translateY(-1px); }
+  button:disabled { opacity: 0.6; cursor: default; transform: none; }
+  .status-msg { font-size: 13px; min-height: 18px; margin-top: 4px; }
+  .status-msg.ok { color: var(--teal); }
+  .status-msg.err { color: var(--rose); }
+  .switch { margin-top: 20px; font-size: 13px; color: var(--text-dim); }
+  .switch a { color: var(--ember-2); text-decoration: none; }
+  .switch a:hover { text-decoration: underline; }
+  .back { color: var(--text-dimmer); font-size: 13px; margin-top: 20px; display: inline-block; text-decoration: none; }
+  .back:hover { color: var(--ember-2); }
+  .pw-wrap { position: relative; }
+  .pw-wrap input { padding-right: 44px; }
+  .pw-toggle {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; padding: 4px;
+    font-size: 13px; color: var(--text-dimmer); width: auto;
+  }
+  .pw-toggle:hover { color: var(--ember-2); transform: translateY(-50%); }
+  .pw-hint { font-size: 11px; color: var(--text-dimmer); text-align: left; margin: -4px 0 2px; line-height: 1.5; }
+  .pw-hint .met { color: var(--teal); }
+</style>
+</head>
+<body>
+  <div class="logo">GRIND</div>
+  <div class="card">
+    <h1>Create your account</h1>
+    <p class="sub">Set up your account now so you're ready to go the moment GRIND launches.</p>
+    <form id="signupForm">
+      <input type="email" id="emailInput" placeholder="you@email.com" required />
+      <div class="pw-wrap">
+        <input type="password" id="passwordInput" placeholder="password" required />
+        <button type="button" class="pw-toggle" data-target="passwordInput">Show</button>
+      </div>
+      <div class="pw-hint" id="pwHint">At least 8 characters, one uppercase letter, and one number</div>
+      <div class="pw-wrap">
+        <input type="password" id="confirmInput" placeholder="confirm password" required />
+        <button type="button" class="pw-toggle" data-target="confirmInput">Show</button>
+      </div>
+      <button type="submit" id="submitBtn">Create account</button>
+    </form>
+    <div class="status-msg" id="statusMsg"></div>
+    <div class="switch">Already have an account? <a href="signin.html">Sign in</a></div>
+  </div>
+  <a class="back" href="index.html">← Back to GRIND</a>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = "https://uksdcyoxjvpmjsqqwdjj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrc2RjeW94anZwbWpzcXF3ZGpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NzgyNTQsImV4cCI6MjEwMDQ1NDI1NH0.l0VYdiYFfd16pQGHtENTTBYtlNvcxYJXtXqMaQVxAVI";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const form = document.getElementById('signupForm');
+    const statusEl = document.getElementById('statusMsg');
+    const btn = document.getElementById('submitBtn');
+
+    // Show/hide password toggles
+    document.querySelectorAll('.pw-toggle').forEach(toggleBtn => {
+      toggleBtn.addEventListener('click', () => {
+        const target = document.getElementById(toggleBtn.dataset.target);
+        const isHidden = target.type === 'password';
+        target.type = isHidden ? 'text' : 'password';
+        toggleBtn.textContent = isHidden ? 'Hide' : 'Show';
+      });
+    });
+
+    function isStrongPassword(pw) {
+      return pw.length >= 8 && /[A-Z]/.test(pw) && /[0-9]/.test(pw);
+    }
+
+    const pwHint = document.getElementById('pwHint');
+    document.getElementById('passwordInput').addEventListener('input', (e) => {
+      const pw = e.target.value;
+      const lenOk = pw.length >= 8;
+      const upperOk = /[A-Z]/.test(pw);
+      const numOk = /[0-9]/.test(pw);
+      pwHint.innerHTML = `<span class="${lenOk ? 'met' : ''}">8+ characters</span> · <span class="${upperOk ? 'met' : ''}">1 uppercase</span> · <span class="${numOk ? 'met' : ''}">1 number</span>`;
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const confirm = document.getElementById('confirmInput').value;
+
+      if (!email || !email.includes('@')) {
+        statusEl.textContent = 'Enter a valid email';
+        statusEl.className = 'status-msg err';
+        return;
+      }
+      if (!isStrongPassword(password)) {
+        statusEl.textContent = 'Password needs 8+ characters, one uppercase letter, and one number';
+        statusEl.className = 'status-msg err';
+        return;
+      }
+      if (password !== confirm) {
+        statusEl.textContent = "Passwords don't match";
+        statusEl.className = 'status-msg err';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        statusEl.textContent = error.message.includes('already registered')
+          ? 'That email is already registered — try signing in instead.'
+          : 'Something went wrong — try again.';
+        statusEl.className = 'status-msg err';
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+        return;
+      }
+
+      if (data.session) {
+        // Email confirmation is off — account is immediately active.
+        statusEl.textContent = 'Account created! Redirecting...';
+        statusEl.className = 'status-msg ok';
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+      } else {
+        // Email confirmation is required before the account is active.
+        statusEl.textContent = 'Account created — check your email to confirm it, then sign in.';
+        statusEl.className = 'status-msg ok';
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+      }
+    });
+  </script>
+</body>
+</html>
