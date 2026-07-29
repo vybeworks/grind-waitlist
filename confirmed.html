@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Email Confirmed — GRIND</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap');
+  :root {
+    --bg: #0D0F16; --card: #14161F; --card-border: #262A38;
+    --ember-1: #8A5A2E; --ember-2: #E8A33D; --ember-3: #F4C15C; --rose: #E85A6E; --teal: #4FD1C5;
+    --text: #EDEAE3; --text-dim: #8B8F9E; --text-dimmer: #4B4F5C;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  .logo { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.18em; margin-bottom: 28px; }
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 20px; padding: 36px; max-width: 400px; width: 100%; }
+  .icon { width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .icon.ok { background: rgba(79,209,197,0.15); }
+  .icon.err { background: rgba(232,90,110,0.15); }
+  h1 { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+  p { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+  a.btn {
+    display: inline-block; background: linear-gradient(90deg, var(--ember-2), var(--rose));
+    border-radius: 10px; padding: 12px 24px; color: #12141C; font-weight: 700; font-size: 14px;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+  <div class="logo">GRIND</div>
+  <div class="card" id="content">
+    <p>Confirming...</p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const supabase = createClient(
+      "https://uksdcyoxjvpmjsqqwdjj.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrc2RjeW94anZwbWpzcXF3ZGpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NzgyNTQsImV4cCI6MjEwMDQ1NDI1NH0.l0VYdiYFfd16pQGHtENTTBYtlNvcxYJXtXqMaQVxAVI"
+    );
+
+    const content = document.getElementById('content');
+
+    function showConfirmed() {
+      content.innerHTML = `
+        <div class="icon ok">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#4FD1C5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1>Email confirmed</h1>
+        <p>Your account is active. You're ready to sign in.</p>
+        <a class="btn" href="signin.html">Go to sign in</a>
+      `;
+    }
+
+    function showError() {
+      content.innerHTML = `
+        <div class="icon err">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#E85A6E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1>Confirmation link expired or invalid</h1>
+        <p>This link may have already been used, or has expired. Try signing in directly — if your account was already confirmed, it'll just work.</p>
+        <a class="btn" href="signin.html">Go to sign in</a>
+      `;
+    }
+
+    let resolved = false;
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (resolved) return;
+      if (session) {
+        resolved = true;
+        showConfirmed();
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (resolved) return;
+      if (session) {
+        resolved = true;
+        showConfirmed();
+      }
+    });
+
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        showError();
+      }
+    }, 4000);
+  </script>
+</body>
+</html>
