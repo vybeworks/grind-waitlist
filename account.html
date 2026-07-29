@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Account Settings — GRIND</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Oswald:wght@500;600;700&display=swap');
+  :root {
+    --bg: #0D0F16; --card: #14161F; --card-border: #262A38;
+    --ember-2: #E8A33D; --rose: #E85A6E; --teal: #4FD1C5;
+    --text: #EDEAE3; --text-dim: #8B8F9E; --text-dimmer: #4B4F5C;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh; padding: 40px 24px;
+  }
+  .wrap { max-width: 440px; margin: 0 auto; }
+  nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .logo { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 0.18em; }
+  .back { color: var(--text-dim); font-size: 13px; text-decoration: none; }
+  .back:hover { color: var(--ember-2); }
+  h1 { font-family: 'Oswald', sans-serif; font-size: 24px; font-weight: 600; margin-bottom: 24px; text-align: center; }
+  .card {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 16px;
+    padding: 28px; margin-bottom: 20px;
+  }
+  h2 { font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--ember-2); }
+  .card p.sub { color: var(--text-dim); font-size: 13px; margin-bottom: 18px; }
+  form { display: flex; flex-direction: column; gap: 10px; }
+  .pw-wrap { position: relative; }
+  input {
+    background: var(--bg); border: 1px solid var(--card-border); border-radius: 10px;
+    padding: 12px 14px; color: var(--text); font-size: 14px; font-family: inherit; width: 100%;
+  }
+  .pw-wrap input { padding-right: 44px; }
+  input:focus { outline: none; border-color: var(--ember-2); }
+  .pw-toggle {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; padding: 4px;
+    font-size: 12px; color: var(--text-dimmer); width: auto;
+  }
+  .pw-toggle:hover { color: var(--ember-2); transform: translateY(-50%); }
+  .pw-hint { font-size: 10px; color: var(--text-dimmer); margin: -2px 0 2px; line-height: 1.4; }
+  .pw-hint .met { color: var(--teal); }
+  button {
+    background: linear-gradient(90deg, var(--ember-2), var(--rose));
+    border: none; border-radius: 10px; padding: 12px 20px;
+    color: #12141C; font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .status-msg { font-size: 12px; min-height: 16px; margin-top: 2px; }
+  .status-msg.ok { color: var(--teal); }
+  .status-msg.err { color: var(--rose); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="logo">GRIND</div>
+      <a class="back" href="dashboard.html">← Back to dashboard</a>
+    </nav>
+    <h1>Account Settings</h1>
+
+    <div class="card">
+      <h2>Change email</h2>
+      <p class="sub">Current: <span id="currentEmail">loading...</span>. We'll send a confirmation to your new address before it takes effect.</p>
+      <form id="emailForm">
+        <input type="email" id="newEmailInput" placeholder="new email address" required />
+        <button type="submit" id="emailBtn">Update email</button>
+      </form>
+      <div class="status-msg" id="emailStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Change password</h2>
+      <p class="sub">Choose a new password for your account.</p>
+      <form id="passwordForm">
+        <div class="pw-wrap">
+          <input type="password" id="newPasswordInput" placeholder="new password" required />
+          <button type="button" class="pw-toggle" id="pwToggle">Show</button>
+        </div>
+        <div class="pw-hint" id="pwHint">At least 8 characters, one uppercase letter, and one number</div>
+        <input type="password" id="confirmPasswordInput" placeholder="confirm new password" required />
+        <button type="submit" id="passwordBtn">Update password</button>
+      </form>
+      <div class="status-msg" id="passwordStatus"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const supabase = createClient(
+      "https://uksdcyoxjvpmjsqqwdjj.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrc2RjeW94anZwbWpzcXF3ZGpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NzgyNTQsImV4cCI6MjEwMDQ1NDI1NH0.l0VYdiYFfd16pQGHtENTTBYtlNvcxYJXtXqMaQVxAVI"
+    );
+
+    // Guard: must be signed in to see this page at all.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        window.location.href = 'signin.html';
+        return;
+      }
+      document.getElementById('currentEmail').textContent = session.user.email;
+    });
+
+    // Change email
+    document.getElementById('emailForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newEmail = document.getElementById('newEmailInput').value.trim();
+      const statusEl = document.getElementById('emailStatus');
+      const btn = document.getElementById('emailBtn');
+      if (!newEmail || !newEmail.includes('@')) {
+        statusEl.textContent = 'Enter a valid email';
+        statusEl.className = 'status-msg err';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+      const { error } = await supabase.auth.updateUser(
+        { email: newEmail },
+        { emailRedirectTo: 'https://joingrindapp.com/confirmed.html' }
+      );
+      if (error) {
+        statusEl.textContent = 'Something went wrong — try again.';
+        statusEl.className = 'status-msg err';
+      } else {
+        statusEl.textContent = 'Check your new email to confirm the change.';
+        statusEl.className = 'status-msg ok';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Update email';
+    });
+
+    // Change password
+    function isStrongPassword(pw) {
+      return pw.length >= 8 && /[A-Z]/.test(pw) && /[0-9]/.test(pw);
+    }
+    const pwInput = document.getElementById('newPasswordInput');
+    const pwHint = document.getElementById('pwHint');
+    document.getElementById('pwToggle').addEventListener('click', (e) => {
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      e.target.textContent = isHidden ? 'Hide' : 'Show';
+    });
+    pwInput.addEventListener('input', (e) => {
+      const pw = e.target.value;
+      const lenOk = pw.length >= 8, upperOk = /[A-Z]/.test(pw), numOk = /[0-9]/.test(pw);
+      pwHint.innerHTML = `<span class="${lenOk ? 'met' : ''}">8+ characters</span> · <span class="${upperOk ? 'met' : ''}">1 uppercase</span> · <span class="${numOk ? 'met' : ''}">1 number</span>`;
+    });
+
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('newPasswordInput').value;
+      const confirm = document.getElementById('confirmPasswordInput').value;
+      const statusEl = document.getElementById('passwordStatus');
+      const btn = document.getElementById('passwordBtn');
+
+      if (!isStrongPassword(password)) {
+        statusEl.textContent = 'Password needs 8+ characters, one uppercase letter, and one number';
+        statusEl.className = 'status-msg err';
+        return;
+      }
+      if (password !== confirm) {
+        statusEl.textContent = "Passwords don't match";
+        statusEl.className = 'status-msg err';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        statusEl.textContent = 'Something went wrong — try again.';
+        statusEl.className = 'status-msg err';
+      } else {
+        statusEl.textContent = 'Password updated.';
+        statusEl.className = 'status-msg ok';
+        document.getElementById('passwordForm').reset();
+      }
+      btn.disabled = false;
+      btn.textContent = 'Update password';
+    });
+  </script>
+</body>
+</html>
